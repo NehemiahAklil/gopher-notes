@@ -1,7 +1,9 @@
 import { cn } from '../../utils/cn';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getCategoryProgress } from '../../utils/progressTracker';
+import { ProgressIndicator } from './progress-indicator';
 
 export const HoverEffect = ({
   items,
@@ -15,6 +17,18 @@ export const HoverEffect = ({
   className?: string;
 }) => {
   let [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [progressData, setProgressData] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    // Load progress for all categories
+    const progress: Record<string, number> = {};
+    items.forEach((item) => {
+      const categoryKey = item.link.replace('/', '');
+      const categoryProgress = getCategoryProgress(categoryKey);
+      progress[categoryKey] = categoryProgress.percentage;
+    });
+    setProgressData(progress);
+  }, [items]);
 
   return (
     <div
@@ -23,37 +37,49 @@ export const HoverEffect = ({
         className
       )}
     >
-      {items.map((item, idx) => (
-        <Link
-          to={item?.link}
-          key={idx}
-          className='relative group  block p-2 h-full w-full'
-          onMouseEnter={() => setHoveredIndex(idx)}
-          onMouseLeave={() => setHoveredIndex(null)}
-        >
-          <AnimatePresence>
-            {hoveredIndex === idx && (
-              <motion.span
-                className='absolute inset-0 h-full w-full bg-slate-200 dark:bg-slate-800/[0.8] block  rounded-3xl'
-                layoutId='hoverBackground'
-                initial={{ opacity: 0 }}
-                animate={{
-                  opacity: 1,
-                  transition: { duration: 0.15 },
-                }}
-                exit={{
-                  opacity: 0,
-                  transition: { duration: 0.15, delay: 0.2 },
-                }}
-              />
-            )}
-          </AnimatePresence>
-          <Card>
-            <CardTitle>{item.title}</CardTitle>
-            <CardDescription>{item.description}</CardDescription>
-          </Card>
-        </Link>
-      ))}
+      {items.map((item, idx) => {
+        const categoryKey = item.link.replace('/', '');
+        const percentage = progressData[categoryKey] || 0;
+        
+        return (
+          <Link
+            to={item?.link}
+            key={idx}
+            className='relative group  block p-2 h-full w-full'
+            onMouseEnter={() => setHoveredIndex(idx)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            <AnimatePresence>
+              {hoveredIndex === idx && (
+                <motion.span
+                  className='absolute inset-0 h-full w-full bg-slate-200 dark:bg-slate-800/[0.8] block  rounded-3xl'
+                  layoutId='hoverBackground'
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: 1,
+                    transition: { duration: 0.15 },
+                  }}
+                  exit={{
+                    opacity: 0,
+                    transition: { duration: 0.15, delay: 0.2 },
+                  }}
+                />
+              )}
+            </AnimatePresence>
+            <Card>
+              <div className='flex justify-between items-start gap-4'>
+                <div className='flex-1'>
+                  <CardTitle>{item.title}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                </div>
+                <div className='flex-shrink-0'>
+                  <ProgressIndicator percentage={percentage} size='sm' />
+                </div>
+              </div>
+            </Card>
+          </Link>
+        );
+      })}
     </div>
   );
 };
