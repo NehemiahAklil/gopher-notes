@@ -10,6 +10,7 @@ import Exercises from './components/Exercises';
 import ExercisePage from './components/ExercisePage';
 import About from './components/About';
 import Error from './components/Error';
+import { Toaster } from 'sonner';
 
 const App = () => {
   const [isDark, setIsDark] = useLocalStorage('isDark', true);
@@ -23,6 +24,7 @@ const App = () => {
 
   return (
     <div className={`${isDark ? 'dark' : ''}`}>
+      <Toaster />
       {isDark ? (
         <div className='fixed -z-20 h-full w-full bg-slate-950'>
           <div className='absolute bottom-0 left-[-20%] right-0 top-[-10%] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle_farthest-side,rgba(255,0,182,.15),rgba(255,255,255,0))]'></div>

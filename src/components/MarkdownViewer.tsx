@@ -18,6 +18,7 @@ import {
   markTopicAsIncomplete,
 } from '../utils/progressTracker';
 import { CheckCircle2, Circle } from 'lucide-react';
+import Notes from './Notes';
 
 type Props = {
   bookmarkedTopics: { link: string }[];
@@ -180,6 +181,13 @@ const MarkdownViewer = ({ bookmarkedTopics, setBookmarkedTopics }: Props) => {
           >
             {markdown}
           </ReactMarkdown>
+
+          {category && topic && !isLoading && (
+            <Notes
+              category={category}
+              topic={topic}
+            />
+          )}
 
           <div className='flex items-end justify-between w-full flex-wrap gap-4'>
             {!isLoading ? (
