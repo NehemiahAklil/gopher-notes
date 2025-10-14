@@ -12,6 +12,12 @@ import Breadcrumb from './ui/breadcrumb';
 import BackToTop from './ui/back-to-top';
 import checkRoute from '../utils/checkRoute';
 import { capitalizeWords } from '../utils/capitalizedWord';
+import {
+  isTopicCompleted,
+  markTopicAsCompleted,
+  markTopicAsIncomplete,
+} from '../utils/progressTracker';
+import { CheckCircle2, Circle } from 'lucide-react';
 
 type Props = {
   bookmarkedTopics: { link: string }[];
@@ -30,6 +36,7 @@ const MarkdownViewer = ({ bookmarkedTopics, setBookmarkedTopics }: Props) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const [bookmarkExists, setBookmarkExists] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const navigate = useNavigate();
 
@@ -81,6 +88,14 @@ const MarkdownViewer = ({ bookmarkedTopics, setBookmarkedTopics }: Props) => {
     );
   }, [link]);
 
+  // Check if topic is completed
+  useEffect(() => {
+    if (category && topic) {
+      const categoryKey = category.replaceAll('-', '_');
+      setIsCompleted(isTopicCompleted(categoryKey, topic));
+    }
+  }, [category, topic]);
+
   // handle bookmarking items
   const handleBookmark = () => {
     // if bookmark exists, remove it
@@ -100,6 +115,20 @@ const MarkdownViewer = ({ bookmarkedTopics, setBookmarkedTopics }: Props) => {
       ...bookmarkedTopics,
     ]);
     setBookmarkExists(true);
+  };
+
+  // Handle marking topic as complete/incomplete
+  const handleToggleComplete = () => {
+    if (category && topic) {
+      const categoryKey = category.replaceAll('-', '_');
+      if (isCompleted) {
+        markTopicAsIncomplete(categoryKey, topic);
+        setIsCompleted(false);
+      } else {
+        markTopicAsCompleted(categoryKey, topic);
+        setIsCompleted(true);
+      }
+    }
   };
 
   return (
@@ -152,19 +181,41 @@ const MarkdownViewer = ({ bookmarkedTopics, setBookmarkedTopics }: Props) => {
             {markdown}
           </ReactMarkdown>
 
-          <div className='flex items-end justify-end w-full'>
+          <div className='flex items-end justify-between w-full flex-wrap gap-4'>
             {!isLoading ? (
-              <div className='flex gap-6'>
-                <BookmarkButton
-                  text={`${
-                    bookmarkExists ? 'Remove bookmark' : 'Bookmark topic'
+              <>
+                <button
+                  onClick={handleToggleComplete}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                    isCompleted
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700'
                   }`}
-                  onBookmark={handleBookmark}
-                />
-                <GitHubButton
-                  to={`https://github.com/AmanuelCh/gopher-notes/blob/main/src/data/${category}/${topic}.md`}
-                />
-              </div>
+                >
+                  {isCompleted ? (
+                    <>
+                      <CheckCircle2 className='w-5 h-5' />
+                      <span>Completed</span>
+                    </>
+                  ) : (
+                    <>
+                      <Circle className='w-5 h-5' />
+                      <span>Mark as Complete</span>
+                    </>
+                  )}
+                </button>
+                <div className='flex gap-6'>
+                  <BookmarkButton
+                    text={`${
+                      bookmarkExists ? 'Remove bookmark' : 'Bookmark topic'
+                    }`}
+                    onBookmark={handleBookmark}
+                  />
+                  <GitHubButton
+                    to={`https://github.com/AmanuelCh/gopher-notes/blob/main/src/data/${category}/${topic}.md`}
+                  />
+                </div>
+              </>
             ) : null}
           </div>
         </div>
